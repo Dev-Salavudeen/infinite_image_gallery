@@ -74,7 +74,3 @@ flutter test
 - Storage / photos permission is required to save images
 - Built and tested on iOS simulator and Android; web may hit Pixabay CORS
 - Pixabay has no long description field, so tags + photographer + stats are the detail “description”
-
-## Screenshots
-
-Drop 2–4 captures in `screenshots/` (home, detail, favourites) or include a short screen recording.
