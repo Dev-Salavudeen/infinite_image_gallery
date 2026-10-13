@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "infinite_image_gallery",
+      "request": "launch",
+      "type": "dart",
+      "args": [
+        "--dart-define=PIXABAY_API_KEY=YOUR_PIXABAY_API_KEY"
+      ]
+    }
+  ]
+}
