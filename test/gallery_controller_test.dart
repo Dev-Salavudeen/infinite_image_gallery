@@ -1,64 +1,61 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:infinite_image_gallery/domain/entities/gallery_image.dart';
-import 'package:infinite_image_gallery/domain/repositories/image_repository.dart';
-import 'package:infinite_image_gallery/presentation/state/gallery_controller.dart';
+import 'package:infinite_image_gallery/models/pixabay_image.dart';
+import 'package:infinite_image_gallery/providers/gallery_provider.dart';
+import 'package:infinite_image_gallery/services/pixabay_service.dart';
 
-class _FakeImageRepository implements ImageRepository {
-  _FakeImageRepository(this.pages);
-
-  final Map<int, List<GalleryImage>> pages;
+class FakeApi extends PixabayService {
+  FakeApi(this.pages);
+  final Map<int, List<PixabayImage>> pages;
   int calls = 0;
 
   @override
-  Future<PagedImages> search({
-    required int page,
-    String query = '',
+  Future<FetchResult> search({
+    int page = 1,
+    String q = '',
     String category = '',
   }) async {
-    calls += 1;
-    final items = pages[page] ?? const <GalleryImage>[];
-    return PagedImages(items: items, totalHits: 3, page: page);
+    calls++;
+    return FetchResult(
+      items: pages[page] ?? [],
+      totalHits: 3,
+      page: page,
+    );
   }
 }
 
-GalleryImage _image(int id) {
-  return GalleryImage(
-    id: id,
-    pageUrl: '',
-    tags: 'nature, forest',
-    previewUrl: 'https://example.com/$id.jpg',
-    webformatUrl: 'https://example.com/$id.jpg',
-    largeImageUrl: 'https://example.com/$id.jpg',
-    views: 1,
-    downloads: 1,
-    likes: 1,
-    comments: 0,
-    user: 'Tester',
-    userId: 1,
-    userImageUrl: '',
-    imageWidth: 100,
-    imageHeight: 80,
-    previewWidth: 100,
-    previewHeight: 80,
-    type: 'photo',
-  );
-}
+PixabayImage img(int id) => PixabayImage(
+      id: id,
+      pageUrl: '',
+      tags: 'trees',
+      previewUrl: 'https://ex.com/$id.jpg',
+      webUrl: 'https://ex.com/$id.jpg',
+      largeUrl: 'https://ex.com/$id.jpg',
+      views: 1,
+      downloads: 1,
+      likes: 1,
+      user: 'x',
+      userId: 1,
+      width: 100,
+      height: 80,
+      previewW: 100,
+      previewH: 80,
+    );
 
 void main() {
-  test('loadInitial replaces items and loadMore appends the next page', () async {
-    final repository = _FakeImageRepository({
-      1: [_image(1), _image(2)],
-      2: [_image(3)],
+  test('loads page 1 then appends page 2', () async {
+    final api = FakeApi({
+      1: [img(1), img(2)],
+      2: [img(3)],
     });
-    final controller = GalleryController(repository);
+    final g = GalleryProvider(api);
 
-    await controller.loadInitial();
-    expect(controller.images.map((image) => image.id), [1, 2]);
-    expect(controller.hasMore, isTrue);
+    await g.firstLoad();
+    expect(g.photos.map((p) => p.id), [1, 2]);
+    expect(g.canLoadMore, true);
 
-    await controller.loadMore();
-    expect(controller.images.map((image) => image.id), [1, 2, 3]);
-    expect(controller.hasMore, isFalse);
-    expect(repository.calls, 2);
+    await g.nextPage();
+    expect(g.photos.map((p) => p.id), [1, 2, 3]);
+    expect(g.canLoadMore, false);
+    expect(api.calls, 2);
   });
 }

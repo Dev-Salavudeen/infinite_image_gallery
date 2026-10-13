@@ -1,5 +1,5 @@
 name: infinite_image_gallery
-description: Infinite-scroll Pixabay image gallery for the Gnxtace Flutter assessment.
+description: Pixabay image gallery with infinite scroll, downloads and favourites.
 publish_to: "none"
 version: 1.0.0+1
 
