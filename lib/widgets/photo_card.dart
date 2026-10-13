@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../models/pixabay_image.dart';
 
+/// Tests can stub network images so CacheManager does not hang the VM.
+@visibleForTesting
+Widget Function(ColorScheme scheme)? debugPhotoImageBuilder;
+
 class PhotoCard extends StatelessWidget {
   const PhotoCard({
     super.key,
@@ -17,64 +21,104 @@ class PhotoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Hero(
-        tag: 'p${img.id}',
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CachedNetworkImage(
-                imageUrl: img.thumb,
-                fit: BoxFit.cover,
-                memCacheWidth: 500,
-                placeholder: (_, __) => Container(
-                  color: Colors.black12,
-                  alignment: Alignment.center,
-                  child: const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AspectRatio(
+          aspectRatio: img.ratio,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
                 ),
-                errorWidget: (_, __, ___) => const ColoredBox(
-                  color: Colors.black12,
-                  child: Icon(Icons.broken_image_outlined),
-                ),
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(6, 18, 6, 6),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black54],
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(20),
+                child: Hero(
+                  tag: 'p${img.id}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        debugPhotoImageBuilder?.call(scheme) ??
+                            CachedNetworkImage(
+                              imageUrl: img.thumb,
+                              fit: BoxFit.cover,
+                              memCacheWidth: 640,
+                              fadeInDuration: Duration.zero,
+                              fadeOutDuration: Duration.zero,
+                              placeholder: (_, _) => ColoredBox(
+                                color: scheme.surfaceContainerHighest,
+                              ),
+                              errorWidget: (_, _, _) => ColoredBox(
+                                color: scheme.surfaceContainerHighest,
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  color: scheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                        if (liked)
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Container(
+                              width: 28,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.38),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.favorite_rounded,
+                                color: Color(0xFFFF8A80),
+                                size: 14,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-                  child: Text(
-                    img.tags.isEmpty ? img.user : img.tags,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
-                  ),
                 ),
               ),
-              if (liked)
-                const Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Icon(Icons.favorite, color: Colors.pinkAccent, size: 16),
-                ),
-            ],
+            ),
           ),
         ),
-      ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 4, 2),
+          child: Text(
+            img.user,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+        if (img.tagList.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 0, 4, 0),
+            child: Text(
+              img.tagList.take(2).join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+      ],
     );
   }
 }

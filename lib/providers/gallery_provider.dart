@@ -16,6 +16,7 @@ class GalleryProvider extends ChangeNotifier {
   String? error;
   bool loading = false;
   bool loadingMore = false;
+  bool loadMoreError = false;
 
   int _page = 0;
   int _total = 0;
@@ -26,6 +27,7 @@ class GalleryProvider extends ChangeNotifier {
   Future<void> firstLoad() async {
     loading = true;
     error = null;
+    loadMoreError = false;
     notifyListeners();
     await _getPage(1, clear: true);
   }
@@ -64,10 +66,10 @@ class GalleryProvider extends ChangeNotifier {
         if (!seen.contains(p.id)) photos.add(p);
       }
       error = null;
+      loadMoreError = false;
     } catch (e) {
-      if (photos.isEmpty) {
-        error = e.toString();
-      }
+      error = e.toString();
+      loadMoreError = !clear && photos.isNotEmpty;
     }
     loading = false;
     loadingMore = false;

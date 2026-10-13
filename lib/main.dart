@@ -6,6 +6,7 @@ import 'providers/fav_provider.dart';
 import 'providers/gallery_provider.dart';
 import 'screens/home_screen.dart';
 import 'services/pixabay_service.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,17 +43,10 @@ class _GalleryAppState extends State<GalleryApp> {
         ChangeNotifierProvider(create: (_) => FavProvider(widget.favBox)),
       ],
       child: MaterialApp(
-        title: 'Image Gallery',
+        title: 'Infinite Image Gallery',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorSchemeSeed: const Color(0xFF00897B),
-          useMaterial3: true,
-        ),
-        darkTheme: ThemeData(
-          colorSchemeSeed: const Color(0xFF00897B),
-          brightness: Brightness.dark,
-          useMaterial3: true,
-        ),
+        theme: AppTheme.light(),
+        darkTheme: AppTheme.dark(),
         themeMode: _dark ? ThemeMode.dark : ThemeMode.light,
         home: HomeScreen(onToggleTheme: _toggleTheme),
       ),
